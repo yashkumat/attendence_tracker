@@ -1,0 +1,402 @@
+!
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Stylish Attendance Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1724;
+            /* dark navy */
+            --card: #0b1220;
+            --muted: #9aa4b2;
+            --accent: #7c5cff;
+            /* pastel neon */
+            --accent-2: #5efcff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: Inter, system-ui, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+            background: linear-gradient(180deg, var(--bg), #071122 80%);
+            color: #e6eef8;
+            margin: 0;
+            padding: 32px;
+        }
+
+        .app {
+            max-width: 920px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        header {
+            grid-column: 1/-1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px
+        }
+
+        h1 {
+            font-size: 20px;
+            margin: 0
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 18px;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6)
+        }
+
+        /* left list */
+        .student-list {
+            padding: 12px;
+            max-height: 68vh;
+            overflow: auto
+        }
+
+        .student-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.005));
+            border: 1px solid rgba(255, 255, 255, 0.02)
+        }
+
+        .meta {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            display: inline-grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #041025;
+            font-weight: 700
+        }
+
+        .info {
+            min-width: 0
+        }
+
+        .name {
+            font-weight: 600;
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .cls {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px
+        }
+
+        .present {
+            background: linear-gradient(90deg, var(--success), #16a34a);
+            color: #05210e
+        }
+
+        .absent {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--muted)
+        }
+
+        .absent.btn:active {
+            transform: translateY(1px)
+        }
+
+        .removed {
+            opacity: 0.45;
+            text-decoration: line-through
+        }
+
+        /* right panel */
+        .right {
+            position: sticky;
+            top: 20px
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 14px
+        }
+
+        .date-pill {
+            background: var(--glass);
+            padding: 8px 10px;
+            border-radius: 999px;
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        .refresh {
+            background: transparent;
+            border: 1px dashed rgba(255, 255, 255, 0.03);
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 10px
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        .stat {
+            padding: 12px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.005));
+            border: 1px solid rgba(255, 255, 255, 0.02)
+        }
+
+        .stat h3 {
+            margin: 0;
+            font-size: 20px
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 12px
+        }
+
+        /* responsive */
+        @media (max-width:880px) {
+            .app {
+                grid-template-columns: 1fr;
+                padding-bottom: 40px
+            }
+
+            .right {
+                position: static
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header>
+            <div>
+                <h1>Attendance Tracker</h1>
+                <div class="subtitle">Fetches students from Google Sheet — mark Present or Absent</div>
+            </div>
+            <div style="text-align:right">
+                <div class="subtitle">Today: <span id="todayReadable">—</span></div>
+                <div style="height:6px"></div>
+                <div class="subtitle">Auto-creates today's column in the sheet if missing</div>
+            </div>
+        </header>
+
+        <section class="card">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px">
+                <strong>Students</strong>
+                <div class="controls">
+                    <div class="date-pill" id="todayISO">—</div>
+                    <button class="refresh" id="reloadBtn">Refresh</button>
+                </div>
+            </div>
+
+            <div class="student-list card" id="studentsContainer">Loading…</div>
+
+            <div style="padding:12px; text-align:center">
+                <small class="muted">Select <strong>Present</strong> to mark present (will be removed from list). Select
+                    <strong>Absent</strong> to mark absent (keeps in list, disabled).</small>
+            </div>
+        </section>
+
+        <aside class="right">
+            <div class="card" style="padding:16px">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <strong>Summary</strong>
+                    <button class="refresh" id="clearAllBtn">Clear all marks</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="muted">Total</div>
+                        <h3 id="totalCount">0</h3>
+                    </div>
+                    <div class="stat">
+                        <div class="muted">Present</div>
+                        <h3 id="presentCount">0</h3>
+                    </div>
+                </div>
+
+                <div class="note">Note: the sheet must have columns: <code>Student Name</code>, <code>Class</code>, then
+                    one column per date (script will add today's column if absent). Paste your Web App URL into the JS
+                    constant in the source file.</div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ----- CONFIG -----
+        // Paste your deployed Google Apps Script Web App URL below (KEEP the quotes)
+        const SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyJX2Amgv-N7YfVsx4H6DRHXKxfxDBAqzC2L56AprBgue8jKVgLnFHRkJ1ErdRawzF/exec";
+
+        // Helpers
+        const today = new Date();
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        const isoToday = today.toISOString().slice(0, 10); // YYYY-MM-DD
+        document.getElementById('todayISO').textContent = isoToday;
+        document.getElementById('todayReadable').textContent = new Date(isoToday).toLocaleDateString();
+
+        // Fetch students who are not marked present today
+        async function loadStudents() {
+            const container = document.getElementById('studentsContainer');
+            container.innerHTML = 'Loading…';
+            try {
+                const res = await fetch(`${SHEET_WEB_APP_URL}?action=get&date=${isoToday}`);
+                if (!res.ok) throw new Error('Bad response');
+                const data = await res.json();
+                renderList(data);
+            } catch (err) {
+                container.innerHTML = `<div style="padding:18px;color:var(--muted)">Could not load students. Check your Web App URL and permissions.</div>`;
+                console.error(err);
+            }
+        }
+
+        function renderList(students) {
+            const container = document.getElementById('studentsContainer');
+            container.innerHTML = '';
+            let total = students.length;
+            let present = 0;
+
+            if (total === 0) {
+                container.innerHTML = '<div style="padding:18px;color:var(--muted)">No students to show (everyone marked present today or sheet is empty).</div>';
+            }
+
+            students.forEach(s => {
+                const row = document.createElement('div');
+                row.className = 'student-row';
+
+                const meta = document.createElement('div');
+                meta.className = 'meta';
+                const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = s.name.split(' ').map(x => x[0] || '').slice(0, 2).join('').toUpperCase();
+                const info = document.createElement('div'); info.className = 'info';
+                const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = s.name;
+                const cl = document.createElement('div'); cl.className = 'cls'; cl.textContent = s.class || '';
+                info.appendChild(nm); info.appendChild(cl);
+                meta.appendChild(avatar); meta.appendChild(info);
+
+                const actions = document.createElement('div'); actions.className = 'actions';
+                const presentBtn = document.createElement('button'); presentBtn.className = 'btn present'; presentBtn.textContent = 'Present';
+                const absentBtn = document.createElement('button'); absentBtn.className = 'btn absent'; absentBtn.textContent = 'Absent';
+
+                presentBtn.onclick = () => markStatus(s.row, 'Present', row, presentBtn, absentBtn);
+                absentBtn.onclick = () => markStatus(s.row, 'Absent', row, presentBtn, absentBtn);
+
+                actions.appendChild(presentBtn); actions.appendChild(absentBtn);
+
+                row.appendChild(meta); row.appendChild(actions);
+                container.appendChild(row);
+            });
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('presentCount').textContent = present;
+        }
+
+        async function markStatus(rowIndex, status, rowEl, presentBtn, absentBtn) {
+            presentBtn.disabled = true; absentBtn.disabled = true;
+            try {
+                const payload = { action: 'mark', row: rowIndex, status: status, date: isoToday };
+                const res = await fetch(SHEET_WEB_APP_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Failed');
+
+                // Update UI: if Present => remove from list to keep it clean
+                if (status === 'Present') {
+                    rowEl.remove();
+                    // update counters
+                    const total = Number(document.getElementById('totalCount').textContent) - 1;
+                    const present = Number(document.getElementById('presentCount').textContent) + 1;
+                    document.getElementById('totalCount').textContent = total;
+                    document.getElementById('presentCount').textContent = present;
+                } else {
+                    // Absent: keep in list but mark visually disabled
+                    rowEl.classList.add('removed');
+                    presentBtn.style.opacity = 0.5;
+                    absentBtn.style.opacity = 0.6;
+                }
+
+            } catch (err) {
+                alert('Error updating sheet. See console for details.');
+                console.error(err);
+                presentBtn.disabled = false; absentBtn.disabled = false;
+            }
+        }
+
+        document.getElementById('reloadBtn').addEventListener('click', loadStudents);
+
+        // Clear all marks for today (use with care) - calls Apps Script endpoint to clear today's column
+        document.getElementById('clearAllBtn').addEventListener('click', async () => {
+            if (!confirm('Clear all marks for today? This will erase P/A values for today.')) return;
+            try {
+                const res = await fetch(SHEET_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'clear', date: isoToday }) });
+                if (!res.ok) throw new Error('failed');
+                alert('Cleared. Re-loading list.');
+                loadStudents();
+            } catch (err) { alert('Failed to clear'); console.error(err); }
+        });
+
+        // initial load
+        loadStudents();
+    </script>
+</body>
+
+</html>
